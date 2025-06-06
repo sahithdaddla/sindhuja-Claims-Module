@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HR Claims Management Portal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 15px;
+        }
+
+        header {
+            background: rgb(109, 100, 239);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        h1 {
+            color: white;
+            margin-bottom: 10px;
+            font-size: clamp(1.5rem, 4vw, 2.5rem);
+        }
+
+        .stats-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .stat-card h3 {
+            font-size: 1.2rem;
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+
+        .stat-card p {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: #34495e;
+        }
+
+        .stat-card.total { border-left: 4px solid rgb(109, 100, 239); }
+        .stat-card.pending { border-left: 4px solid #f39c12; }
+        .stat-card.approved { border-left: 4px solid #2ecc71; }
+        .stat-card.rejected { border-left: 4px solid #e74c3c; }
+
+        .controls {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: nowrap;
+        }
+
+        .controls .search-container {
+            flex: 0 0 auto;
+            width: 500px;
+        }
+
+        .controls .filter-container {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex: 0 0 auto;
+        }
+
+        .controls input[type="text"] {
+            padding: 12px 16px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 16px;
+            width: 100%;
+            background: white;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .controls input[type="text"]:focus {
+            border-color: rgb(109, 100, 239);
+            box-shadow: 0 0 8px rgba(109, 100, 239, 0.3);
+            outline: none;
+        }
+
+        .controls select {
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 16px;
+            width: 150px;
+            background: white;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+            transition: border-color 0.3s;
+        }
+
+        .controls select:focus {
+            border-color: rgb(109, 100, 239);
+            outline: none;
+        }
+
+        .controls button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            background: #e74c3c;
+            color: white;
+            cursor: pointer;
+            transition: transform 0.2s, background 0.2s;
+            width: 150px;
+            font-weight: 500;
+        }
+
+        .controls button:hover {
+            background: #c0392b;
+            transform: translateY(-2px);
+        }
+
+        @media (max-width: 768px) {
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+                justify-content: flex-start;
+                flex-wrap: wrap;
+            }
+            
+            .controls .search-container {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+
+            .controls .filter-container {
+                flex-direction: row;
+                justify-content: flex-end;
+                width: 100%;
+                gap: 10px;
+            }
+
+            .controls input[type="text"] {
+                width: 100%;
+            }
+
+            .controls select,
+            .controls button {
+                width: auto;
+                flex: 1;
+                min-width: 120px;
+            }
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .controls input[type="text"],
+            .controls select {
+                background: #242447;
+                color: #e6e6e6;
+                border-color: #444;
+            }
+        }
+
+        .claims-view {
+            max-width: 1200px;
+            margin: 0 auto;
+            animation: slideIn 0.3s ease;
+            overflow-x: auto;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-top: 20px;
+            min-width: 600px;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background: #f1f1f1;
+            color: #2c3e50;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        tr:hover {
+            background: #f9f9f9;
+        }
+
+        .status-pending { color: #f39c12; }
+        .status-approved { color: #2ecc71; }
+        .status-rejected { color: #e74c3c; }
+
+        .view-btn {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            background: #3498db;
+            color: white;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-size: 14px;
+        }
+
+        .view-btn:hover {
+            background: #2980b9;
+        }
+
+        .card-view {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .table-view {
+                display: none;
+            }
+            
+            .card-view {
+                display: block;
+                margin-top: 20px;
+            }
+            
+            .claim-card {
+                background: white;
+                border-radius: 10px;
+                padding: 15px;
+                margin-bottom: 15px;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                position: relative;
+            }
+            
+            .claim-card-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 10px;
+                border-bottom: 1px solid #eee;
+                padding-bottom: 8px;
+            }
+            
+            .claim-card-title {
+                font-weight: 600;
+                font-size: 1.1rem;
+            }
+            
+            .claim-card-content {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 8px;
+                margin-bottom: 15px;
+                font-size: 0.95rem;
+            }
+            
+            .claim-card-content span {
+                display: block;
+            }
+            
+            .claim-card-content span:nth-child(odd) {
+                font-weight: 500;
+                color: #555;
+            }
+            
+            .claim-card-actions {
+                text-align: right;
+            }
+        }
+
+        .claim-details {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            max-width: 500px;
+            width: 90%;
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
+            border: 1px solid #ddd;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .claim-details h3 {
+            margin-bottom: 20px;
+            color: #2c3e50;
+            font-size: 1.8rem;
+            border-bottom: 2px solid rgb(109, 100, 239);
+            padding-bottom: 8px;
+        }
+
+        .claim-details p {
+            margin-bottom: 12px;
+            word-break: break-word;
+            line-height: 1.5;
+            font-size: 1rem;
+            color: #34495e;
+        }
+
+        .claim-details p strong {
+            color: #2c3e50;
+            font-weight: 600;
+        }
+
+        .claim-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .claim-actions button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.2s;
+            flex: 1;
+            max-width: 120px;
+            font-weight: 500;
+        }
+
+        .approve-btn {
+            background: #2ecc71;
+        }
+
+        .approve-btn:hover {
+            background: #27ae60;
+            transform: translateY(-2px);
+        }
+
+        .reject-btn {
+            background: #e74c3c;
+        }
+
+        .reject-btn:hover {
+            background: #c0392b;
+            transform: translateY(-2px);
+        }
+
+        .close-btn {
+            background: #7f8c8d;
+        }
+
+        .close-btn:hover {
+            background: #6c7778;
+            transform: translateY(-2px);
+        }
+
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 8px;
+            background: #2ecc71;
+            color: white;
+            transform: translateX(200%);
+            transition: transform 0.3s ease;
+            z-index: 1001;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        h2 {
+            text-align: center;
+            color: #2c3e50;
+            font-size: clamp(1.2rem, 3vw, 1.8rem);
+            margin-bottom: 20px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .empty-state p {
+            color: #7f8c8d;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 600px) {
+            .claim-details {
+                padding: 20px;
+                width: 95%;
+            }
+
+            .claim-details h3 {
+                font-size: 1.5rem;
+            }
+
+            .claim-actions button {
+                padding: 8px 15px;
+                font-size: 14px;
+                flex: 1 1 100%;
+                max-width: none;
+            }
+            
+            table {
+                font-size: 14px;
+            }
+
+            th, td {
+                padding: 8px 6px;
+            }
+        }
+
+        @media (prefers-color-scheme: dark) {
+            body {
+                background: #1a1a2e;
+                color: #e6e6e6;
+            }
+
+            header {
+                background: rgb(89, 80, 219);
+            }
+
+            table, .claim-card, .claim-details, .empty-state, .stat-card {
+                background: #242447;
+                color: #e6e6e6;
+            }
+
+            th {
+                background: #30304d;
+                color: #ffffff;
+            }
+
+            tr:hover {
+                background: #30304d;
+            }
+
+            th, td {
+                border-bottom: 1px solid #444;
+            }
+
+            .claim-details p {
+                color: #e6e6e6;
+            }
+
+            .claim-details p strong {
+                color: #ffffff;
+            }
+
+            .empty-state p {
+                color: #999;
+            }
+
+            .controls input[type="text"], .controls select {
+                background: #242447;
+                color: #e6e6e6;
+                border-color: #444;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>HR Claims Management</h1>
+        </header>
+
+        <div class="stats-cards">
+            <div class="stat-card total">
+                <h3>Total Claims</h3>
+                <p id="totalClaims">0</p>
+            </div>
+            <div class="stat-card pending">
+                <h3>Pending Claims</h3>
+                <p id="pendingClaims">0</p>
+            </div>
+            <div class="stat-card approved">
+                <h3>Approved Claims</h3>
+                <p id="approvedClaims">0</p>
+            </div>
+            <div class="stat-card rejected">
+                <h3>Rejected Claims</h3>
+                <p id="rejectedClaims">0</p>
+            </div>
+        </div>
+
+        <div class="controls">
+            <div class="search-container">
+                <input type="text" id="searchInput" placeholder="Search by Employee ID, Name, Claim Type, or Details">
+            </div>
+            <div class="filter-container">
+                <select id="statusFilter">
+                    <option value="all">All Status</option>
+                    <option value="pending">Pending</option>
+                    <option value="approved">Approved</option>
+                    <option value="rejected">Rejected</option>
+                </select>
+                <button onclick="clearAllClaims()">Clear All Records</button>
+            </div>
+        </div>
+
+        <div class="claims-view">
+            <h2>Claims Review</h2>
+            
+            <div class="table-view">
+                <table id="claimsTable">
+                    <thead>
+                        <tr>
+                            <th>Employee ID</th>
+                            <th>Employee Name</th>
+                            <th>Claim Type</th>
+                            <th>Amount</th>
+                            <th>Submission Date</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="claimsList"></tbody>
+                </table>
+            </div>
+            
+            <div class="card-view" id="claimsCards"></div>
+        </div>
+
+        <div class="overlay" id="overlay"></div>
+        <div class="claim-details" id="claimDetails"></div>
+    </div>
+
+    <script>
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            notification.textContent = message;
+            if (type === 'error') {
+                notification.style.background = '#e74c3c';
+            }
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.classList.add('show');
+            }, 100);
+
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => {
+                    notification.remove();
+                }, 300);
+            }, 3000);
+        }
+
+        function showClaimDetails(claim) {
+            const claimDetails = document.getElementById('claimDetails');
+            const overlay = document.getElementById('overlay');
+            
+            let details = '';
+            if (claim.type === 'travel') {
+                details = `
+                    <p><strong>Date of Travel:</strong> ${claim.travel_date ? new Date(claim.travel_date).toLocaleDateString() : 'N/A'}</p>
+                    <p><strong>From Destination:</strong> ${claim.from_destination || 'N/A'}</p>
+                    <p><strong>To Destination:</strong> ${claim.to_destination || 'N/A'}</p>
+                    <p><strong>Purpose:</strong> ${claim.purpose || 'N/A'}</p>
+                `;
+            } else if (claim.type === 'medical') {
+                details = `
+                    <p><strong>Date of Treatment:</strong> ${claim.treatment_date ? new Date(claim.treatment_date).toLocaleDateString() : 'N/A'}</p>
+                    <p><strong>Hospital/Clinic Name:</strong> ${claim.hospital || 'N/A'}</p>
+                    <p><strong>Treatment Type:</strong> ${claim.treatment_type || 'N/A'}</p>
+                `;
+            } else if (claim.type === 'other') {
+                details = `
+                    <p><strong>Date:</strong> ${claim.claim_date ? new Date(claim.claim_date).toLocaleDateString() : 'N/A'}</p>
+                    <p><strong>Claim Type:</strong> ${claim.claim_type || 'N/A'}</p>
+                    <p><strong>Description:</strong> ${claim.description || 'N/A'}</p>
+                `;
+            }
+
+            claimDetails.innerHTML = `
+                <h3>${claim.type.toUpperCase()} Claim</h3>
+                <p><strong>Employee ID:</strong> ${claim.employee_id || 'N/A'}</p>
+                <p><strong>Employee Name:</strong> ${claim.employee_name || 'N/A'}</p>
+                ${details}
+                <p><strong>Amount:</strong> ${claim.amount || 'N/A'}</p>
+                <p><strong>Submission Date:</strong> ${new Date(claim.submission_date).toLocaleDateString()}</p>
+                <p><strong>Status:</strong> <span class="status-${claim.status}">${claim.status.toUpperCase()}</span></p>
+                ${claim.status === 'pending' ? `
+                    <div class="claim-actions">
+                        <button class="approve-btn" onclick="confirmApprove(${claim.id})">Approve</button>
+                        <button class="reject-btn" onclick="confirmReject(${claim.id})">Reject</button>
+                    </div>
+                ` : ''}
+                <div class="claim-actions">
+                    <button class="close-btn" onclick="closeClaimDetails()">Close</button>
+                </div>
+            `;
+
+            claimDetails.style.display = 'block';
+            overlay.style.display = 'block';
+        }
+
+        function closeClaimDetails() {
+            document.getElementById('claimDetails').style.display = 'none';
+            document.getElementById('overlay').style.display = 'none';
+        }
+
+        function confirmApprove(claimId) {
+            if (confirm('Are you sure you want to approve this claim? This action will mark the claim as approved and notify the employee.')) {
+                updateClaimStatus(claimId, 'approved');
+            }
+        }
+
+        function confirmReject(claimId) {
+            if (confirm('Are you sure you want to reject this claim? This action will mark the claim as rejected and notify the employee.')) {
+                updateClaimStatus(claimId, 'rejected');
+            }
+        }
+
+        async function updateClaimStatus(claimId, status) {
+            try {
+                const response = await fetch(`http://localhost:3000/api/claims/${claimId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ status })
+                });
+
+                const result = await response.json();
+                if (response.ok) {
+                    showNotification(`Claim ${status} successfully!`);
+                    closeClaimDetails();
+                    loadClaims(
+                        document.getElementById('searchInput').value,
+                        document.getElementById('statusFilter').value
+                    );
+                } else {
+                    showNotification(result.error || 'Error updating claim status', 'error');
+                }
+            } catch (error) {
+                showNotification('Error updating claim status', 'error');
+            }
+        }
+
+        function updateStats(claims) {
+            const totalClaims = claims.length;
+            const pendingClaims = claims.filter(claim => claim.status === 'pending').length;
+            const approvedClaims = claims.filter(claim => claim.status === 'approved').length;
+            const rejectedClaims = claims.filter(claim => claim.status === 'rejected').length;
+
+            document.getElementById('totalClaims').textContent = totalClaims;
+            document.getElementById('pendingClaims').textContent = pendingClaims;
+            document.getElementById('approvedClaims').textContent = approvedClaims;
+            document.getElementById('rejectedClaims').textContent = rejectedClaims;
+        }
+
+        async function loadClaims(searchTerm = '', statusFilter = 'all') {
+            const claimsList = document.getElementById('claimsList');
+            const claimsCards = document.getElementById('claimsCards');
+
+            try {
+                const query = new URLSearchParams({ search: searchTerm, status: statusFilter });
+                const response = await fetch(`http://localhost:3000/api/claims?${query}`);
+                const claims = await response.json();
+
+                updateStats(claims);
+
+                if (claims.length === 0) {
+                    const emptyStateHtml = `
+                        <div class="empty-state">
+                            <p>No claims found matching your criteria.</p>
+                        </div>`;
+                    claimsList.innerHTML = '<tr><td colspan="7" style="text-align: center;">No claims found.</td></tr>';
+                    claimsCards.innerHTML = emptyStateHtml;
+                    return;
+                }
+
+                claimsList.innerHTML = claims.map(claim => `
+                    <tr>
+                        <td>${claim.employee_id || 'N/A'}</td>
+                        <td>${claim.employee_name || 'N/A'}</td>
+                        <td>${claim.type.charAt(0).toUpperCase() + claim.type.slice(1)}</td>
+                        <td>${claim.amount || 'N/A'}</td>
+                        <td>${new Date(claim.submission_date).toLocaleDateString()}</td>
+                        <td><span class="status-${claim.status}">${claim.status.toUpperCase()}</span></td>
+                        <td><button class="view-btn" onclick='showClaimDetails(${JSON.stringify(claim).replace(/'/g, "\\'")})'>View</button></td>
+                    </tr>
+                `).join('');
+
+                claimsCards.innerHTML = claims.map(claim => `
+                    <div class="claim-card">
+                        <div class="claim-card-header">
+                            <div class="claim-card-title">${claim.type.charAt(0).toUpperCase() + claim.type.slice(1)} Claim</div>
+                            <span class="status-${claim.status}">${claim.status.toUpperCase()}</span>
+                        </div>
+                        <div class="claim-card-content">
+                            <span>Employee ID:</span>
+                            <span>${claim.employee_id || 'N/A'}</span>
+                            <span>Employee Name:</span>
+                            <span>${claim.employee_name || 'N/A'}</span>
+                            <span>Amount:</span>
+                            <span>${claim.amount || 'N/A'}</span>
+                            <span>Date:</span>
+                            <span>${new Date(claim.submission_date).toLocaleDateString()}</span>
+                        </div>
+                        <div class="claim-card-actions">
+                            <button class="view-btn" onclick='showClaimDetails(${JSON.stringify(claim).replace(/'/g, "\\'")})'>View Details</button>
+                        </div>
+                    </div>
+                `).join('');
+
+            } catch (error) {
+                showNotification('Error fetching claims', 'error');
+            }
+        }
+
+        async function clearAllClaims() {
+            if (confirm('Are you sure you want to clear all claims? This action cannot be undone.')) {
+                try {
+                    const response = await fetch('http://localhost:3000/api/claims', {
+                        method: 'DELETE'
+                    });
+                    const result = await response.json();
+                    if (response.ok) {
+                        showNotification('All claims cleared successfully!');
+                        loadClaims();
+                    } else {
+                        showNotification(result.error || 'Error clearing claims', 'error');
+                    }
+                } catch (error) {
+                    showNotification('Error clearing claims', 'error');
+                }
+            }
+        }
+
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            loadClaims(e.target.value, document.getElementById('statusFilter').value);
+        });
+
+        document.getElementById('statusFilter').addEventListener('change', (e) => {
+            loadClaims(document.getElementById('searchInput').value, e.target.value);
+        });
+
+        document.getElementById('overlay').addEventListener('click', closeClaimDetails);
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && document.getElementById('claimDetails').style.display === 'block') {
+                closeClaimDetails();
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadClaims();
+            
+            const handleResize = () => {
+                const tableView = document.querySelector('.table-view');
+                const cardView = document.querySelector('.card-view');
+                
+                if (window.innerWidth <= 768) {
+                    tableView.style.display = 'none';
+                    cardView.style.display = 'block';
+                } else {
+                    tableView.style.display = 'block';
+                    cardView.style.display = 'none';
+                }
+            };
+            
+            handleResize();
+            window.addEventListener('resize', handleResize);
+        });
+    </script>
+</body>
+</html>

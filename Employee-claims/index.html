@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Claims Portal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #f5f7fa;
+            color: #333;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 10px;
+        }
+
+        header {
+            background: rgb(109, 100, 239);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        h1 {
+            color: white;
+            margin-bottom: 10px;
+            font-size: clamp(1.5rem, 4vw, 2.5rem);
+        }
+
+        nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        nav button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background: #3498db;
+            color: white;
+            cursor: pointer;
+            transition: transform 0.2s, background 0.2s;
+            flex: 1 1 auto;
+            max-width: 180px;
+        }
+
+        @media (max-width: 600px) {
+            nav button {
+                flex: 1 1 100%;
+                max-width: 100%;
+            }
+        }
+
+        nav button:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+
+        .claim-form {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: none;
+            animation: slideIn 0.3s ease;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        @media (min-width: 768px) {
+            .claim-form {
+                padding: 30px;
+            }
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #2c3e50;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        .form-group textarea {
+            height: 100px;
+            resize: none;
+        }
+
+        button[type="submit"] {
+            background: #2ecc71;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.2s;
+            width: 100%;
+            max-width: 300px;
+            margin: 0 auto;
+            display: block;
+        }
+
+        @media (max-width: 480px) {
+            button[type="submit"] {
+                max-width: 100%;
+            }
+        }
+
+        button[type="submit"]:hover {
+            background: #27ae60;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 5px;
+            background: #2ecc71;
+            color: white;
+            transform: translateX(200%);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .error-message {
+            color: #e74c3c;
+            font-size: 14px;
+            margin-top: 5px;
+            display: none;
+        }
+        
+        input.error, textarea.error, select.error {
+            border-color: #e74c3c;
+            background-color: #fff5f5;
+        }
+        
+        .error-message.show {
+            display: block;
+        }
+
+        h2 {
+            text-align: center;
+            color: #2c3e50;
+            font-size: clamp(1.2rem, 3vw, 1.8rem);
+        }
+
+        @media (max-width: 480px) {
+            .form-group {
+                margin-bottom: 15px;
+            }
+            
+            .form-group input,
+            .form-group select,
+            .form-group textarea {
+                padding: 8px;
+                font-size: 14px;
+            }
+        }
+
+        input[type=number]::-webkit-inner-spin-button,
+        input[type=number]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Employee Claims Management</h1>
+        </header>
+
+        <nav>
+            <button onclick="showForm('travel')">Travel Claim</button>
+            <button onclick="showForm('medical')">Medical Claim</button>
+            <button onclick="showForm('other')">Other Claim</button>
+        </nav>
+
+        <main>
+            <div id="travelForm" class="claim-form">
+                <h2>Travel Claim</h2><br>
+                <form id="travelClaimForm" novalidate>
+                    <div class="form-group">
+                        <label for="travelEmployeeId">Employee ID *</label>
+                        <input type="text" id="travelEmployeeId" name="employeeId" required 
+                               pattern="^ATS0(?!000)\d{3}$" 
+                               title="Employee ID must be in the format: ATS0 followed by 3 digits">
+                        <div class="error-message" id="travelEmployeeId-error"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Employee Name</label>
+                        <input type="text" name="employeeName" required maxlength="60">
+                        <div class="error-message" id="travelEmployeeName-error"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Date of Travel</label>
+                        <input type="date" name="travelDate" required>
+                        <div class="error-message" id="travelDate-error"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>From Destination</label>
+                        <input type="text" name="fromDestination" required maxlength="60">
+                        <div class="error-message" id="fromDestination-error"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>To Destination</label>
+                        <input type="text" name="toDestination" required maxlength="60">
+                        <div class="error-message" id="toDestination-error"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Purpose</label>
+                        <textarea name="purpose" required maxlength="300"></textarea>
+                        <div class="error-message" id="purpose-error"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Amount</label>
+                        <input type="number" name="amount" required min="500"
+                               onkeydown="return event.key !== 'e' && event.key !== 'E'"
+                               oninput="this.value = this.value.replace(/[eE]/g, '')"
+                               maxlength="7"
+                               placeholder="Minimum amount: 500">
+                        <div class="error-message" id="travelAmount-error"></div>
+                    </div>
+                    
+                    <button type="submit">Submit Claim</button>
+                </form>
+            </div>
+
+            <div id="medicalForm" class="claim-form">
+                <h2>Medical Claim</h2><br>
+                <form id="medicalClaimForm" novalidate>
+                    <div class="form-group">
+                        <label for="medicalEmployeeId">Employee ID *</label>
+                        <input type="text" id="medicalEmployeeId" name="employeeId" required 
+                               pattern="^ATS0(?!000)\d{3}$" 
+                               title="Employee ID must be in the format: ATS0 followed by 3 digits">
+                        <div class="error-message" id="medicalEmployeeId-error"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Employee Name</label>
+                        <input type="text" name="employeeName" required maxlength="60">
+                        <div class="error-message" id="medicalEmployeeName-error"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Date of Treatment</label>
+                        <input type="date" name="treatmentDate" required>
+                        <div class="error-message" id="treatmentDate-error"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Hospital/Clinic Name</label>
+                        <input type="text" name="hospital" required maxlength="30">
+                        <div class="error-message" id="hospital-error"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Treatment Type</label>
+                        <select name="treatmentType" required>
+                            <option value="">Select Treatment Type</option>
+                            <option value="consultation">Consultation</option>
+                            <option value="surgery">Surgery</option>
+                            <option value="medication">Medication</option>
+                            
+                        </select>
+                        <div class="error-message" id="treatmentType-error"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Amount</label>
+                        <input type="number" name="amount" required min="500"
+                               onkeydown="return event.key !== 'e' && event.key !== 'E'"
+                               oninput="this.value = this.value.replace(/[eE]/g, '')"
+                               maxlength="7"
+                               placeholder="Minimum amount: 500">
+                        <div class="error-message" id="medicalAmount-error"></div>
+                    </div>
+                    
+                    <button type="submit">Submit Claim</button>
+                </form>
+            </div>
+
+            <div id="otherForm" class="claim-form">
+                <h2>Other Claim</h2><br>
+                <form id="otherClaimForm" novalidate>
+                    <div class="form-group">
+                        <label for="otherEmployeeId">Employee ID *</label>
+                        <input type="text" id="otherEmployeeId" name="employeeId" required 
+                               pattern="^ATS0(?!000)\d{3}$" 
+                               title="Employee ID must be in the format: ATS0 followed by 3 digits">
+                        <div class="error-message" id="otherEmployeeId-error"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Employee Name</label>
+                        <input type="text" name="employeeName" required maxlength="60">
+                        <div class="error-message" id="otherEmployeeName-error"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Date</label>
+                        <input type="date" name="claimDate" required>
+                        <div class="error-message" id="claimDate-error"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Claim Type</label>
+                        <input type="text" name="claimType" required maxlength="30">
+                        <div class="error-message" id="claimType-error"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea name="description" required maxlength="300"></textarea>
+                        <div class="error-message" id="description-error"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Amount</label>
+                        <input type="number" name="amount" required min="500"
+                               onkeydown="return event.key !== 'e' && event.key !== 'E'" 
+                               oninput="this.value = this.value.replace(/[eE]/g, '')"
+                               maxlength="7"
+                               placeholder="Minimum amount: 500">
+                        <div class="error-message" id="otherAmount-error"></div>
+                    </div>
+                    
+                    <button type="submit">Submit Claim</button>
+                </form>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        let currentForm = null;
+
+        function showForm(formType) {
+            const forms = ['travel', 'medical', 'other'];
+            forms.forEach(type => {
+                const form = document.getElementById(`${type}Form`);
+                form.style.display = type === formType ? 'block' : 'none';
+            });
+            currentForm = formType;
+        }
+
+        function showNotification(message, isError = false) {
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            notification.style.background = isError ? '#e74c3c' : '#2ecc71';
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.classList.add('show');
+            }, 100);
+
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => {
+                    notification.remove();
+                }, 300);
+            }, 3000);
+        }
+
+        function validateTextInput(input) {
+            let errorElement;
+            if (input.name === 'employeeName' && input.form.id === 'travelClaimForm') {
+                errorElement = document.getElementById('travelEmployeeName-error');
+            } else if (input.name === 'employeeName' && input.form.id === 'medicalClaimForm') {
+                errorElement = document.getElementById('medicalEmployeeName-error');
+            } else if (input.name === 'employeeName' && input.form.id === 'otherClaimForm') {
+                errorElement = document.getElementById('otherEmployeeName-error');
+            } else {
+                errorElement = document.getElementById(`${input.name}-error`);
+            }
+            
+            let value = input.value;
+            
+            if (input.name === 'employeeName') {
+                value = value.replace(/[^a-zA-Z\s]/g, '');
+                value = value.replace(/^\s+/, '');
+                if (value.length > 0 && value[0] !== ' ') {
+                    value = value.replace(/\s+/g, ' ');
+                } else {
+                    value = value.trim();
+                }
+                value = value.substring(0, 60);
+                if (value !== input.value) {
+                    input.value = value;
+                }
+                const alphaCount = value.replace(/\s/g, '').length;
+                if (value.trim().length === 0) {
+                    input.classList.add('error');
+                    errorElement.textContent = 'Employee Name must contain at least one character (spaces only are not allowed)';
+                    errorElement.classList.add('show');
+                    return false;
+                } else if (alphaCount < 3) {
+                    input.classList.add('error');
+                    errorElement.textContent = 'Employee Name must contain at least 3 alphabetic characters';
+                    errorElement.classList.add('show');
+                    return false;
+                }
+                input.classList.remove('error');
+                errorElement.classList.remove('show');
+                return true;
+            }
+            
+            if ((input.name === 'fromDestination' || input.name === 'toDestination') && input.form.id === 'travelClaimForm') {
+                value = value.replace(/[^a-zA-Z\s]/g, '');
+                value = value.replace(/^\s+/, '');
+                if (value.length > 0 && value[0] !== ' ') {
+                    value = value.replace(/\s+/g, ' ');
+                } else {
+                    value = value.trim();
+                }
+                value = value.substring(0, 60);
+                if (value !== input.value) {
+                    input.value = value;
+                }
+                const alphaCount = value.replace(/\s/g, '').length;
+                if (value.trim().length === 0) {
+                    input.classList.add('error');
+                    errorElement.textContent = `${input.name === 'fromDestination' ? 'From' : 'To'} Destination must contain at least one character (spaces only are not allowed)`;
+                    errorElement.classList.add('show');
+                    return false;
+                } else if (alphaCount < 3) {
+                    input.classList.add('error');
+                    errorElement.textContent = `${input.name === 'fromDestination' ? 'From' : 'To'} Destination must contain at least 3 alphabetic characters`;
+                    errorElement.classList.add('show');
+                    return false;
+                }
+                input.classList.remove('error');
+                errorElement.classList.remove('show');
+                return true;
+            }
+            
+            if (input.name === 'hospital' && input.form.id === 'medicalClaimForm') {
+                value = value.replace(/[^a-zA-Z\s]/g, '');
+                value = value.replace(/^\s+/, '');
+                if (value.length > 0 && value[0] !== ' ') {
+                    value = value.replace(/\s+/g, ' ');
+                } else {
+                    value = value.trim();
+                }
+                value = value.substring(0, 30);
+                if (value !== input.value) {
+                    input.value = value;
+                }
+                const alphaCount = value.replace(/\s/g, '').length;
+                if (value.trim().length === 0) {
+                    input.classList.add('error');
+                    errorElement.textContent = 'Hospital/Clinic Name must contain at least one character (spaces only are not allowed)';
+                    errorElement.classList.add('show');
+                    return false;
+                } else if (alphaCount < 5) {
+                    input.classList.add('error');
+                    errorElement.textContent = 'Hospital/Clinic Name must contain at least 5 alphabetic characters';
+                    errorElement.classList.add('show');
+                    return false;
+                }
+                input.classList.remove('error');
+                errorElement.classList.remove('show');
+                return true;
+            }
+            
+            if (input.name === 'claimType' && input.form.id === 'otherClaimForm') {
+                value = value.replace(/[^a-zA-Z\s]/g, '');
+                value = value.replace(/^\s+/, '');
+                if (value.length > 0 && value[0] !== ' ') {
+                    value = value.replace(/\s+/g, ' ');
+                } else {
+                    value = value.trim();
+                }
+                value = value.substring(0, 30);
+                if (value !== input.value) {
+                    input.value = value;
+                }
+                const alphaCount = value.replace(/\s/g, '').length;
+                if (value.trim().length === 0) {
+                    input.classList.add('error');
+                    errorElement.textContent = 'Claim Type must contain at least one character (spaces only are not allowed)';
+                    errorElement.classList.add('show');
+                    return false;
+                } else if (alphaCount < 5) {
+                    input.classList.add('error');
+                    errorElement.textContent = 'Claim Type must contain at least 5 alphabetic characters';
+                    errorElement.classList.add('show');
+                    return false;
+                }
+                input.classList.remove('error');
+                errorElement.classList.remove('show');
+                return true;
+            }
+            
+            const oldValue = value;
+            value = value.replace(/[^a-zA-Z\s]/g, '');
+            if (value !== oldValue) {
+                input.value = value;
+            }
+            if (value.trim().length === 0) {
+                input.classList.add('error');
+                errorElement.textContent = 'This field must contain at least one character (spaces only are not allowed)';
+                errorElement.classList.add('show');
+                return false;
+            }
+            if (value.replace(/\s/g, '').length < 5) {
+                input.classList.add('error');
+                errorElement.textContent = 'This field must contain at least 5 non-space characters';
+                errorElement.classList.add('show');
+                return false;
+            }
+            input.classList.remove('error');
+            errorElement.classList.remove('show');
+            return true;
+        }
+
+        function validateDate(input) {
+            const errorElement = document.getElementById(`${input.name}-error`);
+            const dateValue = input.value;
+            
+            if (!dateValue) {
+                input.classList.add('error');
+                errorElement.textContent = 'Please select a date';
+                errorElement.classList.add('show');
+                return false;
+            }
+            
+            const year = parseInt(dateValue.split('-')[0]);
+            const dateSelected = new Date(dateValue);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            if (input.name === 'travelDate' && input.form.id === 'travelClaimForm') {
+                const twoYearsAgo = new Date();
+                twoYearsAgo.setFullYear(today.getFullYear() - 2);
+                const oneYearFromNow = new Date();
+                oneYearFromNow.setFullYear(today.getFullYear() + 1);
+                
+                if (year > 9999) {
+                    input.classList.add('error');
+                    errorElement.textContent = 'Year must not exceed 4 digits';
+                    errorElement.classList.add('show');
+                    return false;
+                } else if (dateSelected < twoYearsAgo) {
+                    input.classList.add('error');
+                    errorElement.textContent = 'Date cannot be more than 2 years in the past';
+                    errorElement.classList.add('show');
+                    return false;
+                } else if (dateSelected > oneYearFromNow) {
+                    input.classList.add('error');
+                    errorElement.textContent = 'Date cannot be more than 1 year in the future';
+                    errorElement.classList.add('show');
+                    return false;
+                }
+            } 
+            else if (input.name === 'treatmentDate' && input.form.id === 'medicalClaimForm') {
+                const twoYearsAgo = new Date();
+                twoYearsAgo.setFullYear(today.getFullYear() - 2);
+                const oneYearFromNow = new Date();
+                oneYearFromNow.setFullYear(today.getFullYear() + 1);
+                
+                if (year > 9999) {
+                    input.classList.add('error');
+                    errorElement.textContent = 'Year must not exceed 4 digits';
+                    errorElement.classList.add('show');
+                    return false;
+                } else if (dateSelected < twoYearsAgo) {
+                    input.classList.add('error');
+                    errorElement.textContent = 'Date cannot be more than 2 years in the past';
+                    errorElement.classList.add('show');
+                    return false;
+                } else if (dateSelected > oneYearFromNow) {
+                    input.classList.add('error');
+                    errorElement.textContent = 'Date cannot be more than 1 year in the future';
+                    errorElement.classList.add('show');
+                    return false;
+                }
+            } 
+            else if (input.name === 'claimDate' && input.form.id === 'otherClaimForm') {
+                const twoYearsAgo = new Date();
+                twoYearsAgo.setFullYear(today.getFullYear() - 2);
+                const oneYearFromNow = new Date();
+                oneYearFromNow.setFullYear(today.getFullYear() + 1);
+                
+                if (year > 9999) {
+                    input.classList.add('error');
+                    errorElement.textContent = 'Year must not exceed 4 digits';
+                    errorElement.classList.add('show');
+                    return false;
+                } else if (dateSelected < twoYearsAgo) {
+                    input.classList.add('error');
+                    errorElement.textContent = 'Date cannot be more than 2 years in the past';
+                    errorElement.classList.add('show');
+                    return false;
+                } else if (dateSelected > oneYearFromNow) {
+                    input.classList.add('error');
+                    errorElement.textContent = 'Date cannot be more than 1 year in the future';
+                    errorElement.classList.add('show');
+                    return false;
+                }
+            }
+            
+            input.classList.remove('error');
+            errorElement.classList.remove('show');
+            return true;
+        }
+
+        function validateEmployeeId(input, errorId) {
+            const errorElement = document.getElementById(errorId);
+            let value = input.value;
+            const pattern = /^ATS0(?!000)\d{3}$/;
+            
+            const oldValue = value;
+            value = value.toUpperCase().replace(/[^a-zA-Z0-9]/g, '');
+            if (value.startsWith('ATS')) {
+                const digits = value.substring(3).replace(/[^0-9]/g, '').substring(0, 4);
+                value = 'ATS' + digits;
+            } else {
+                value = value.substring(0, 3).replace(/[^ATS]/g, '');
+            }
+            
+            if (value !== oldValue) {
+                input.value = value;
+            }
+            
+            if (!pattern.test(value)) {
+                input.classList.add('error');
+                errorElement.textContent = 'Employee ID must be in format ATS0 followed by 3 digits (e.g., ATS0123)';
+                errorElement.classList.add('show');
+                return false;
+            }
+            
+            input.classList.remove('error');
+            errorElement.classList.remove('show');
+            return true;
+        }
+
+        function validateAmount(input, errorId) {
+            const errorElement = document.getElementById(errorId);
+            const value = parseFloat(input.value);
+            const minAmount = 500;
+            
+            const numericValue = input.value.replace(/[^0-9.]/g, '');
+            if (numericValue.replace('.', '').length > 7) {
+                input.value = numericValue.substring(0, 7);
+            }
+            
+            if (input.value === '') {
+                input.classList.add('error');
+                errorElement.textContent = 'Please enter an amount';
+                errorElement.classList.add('show');
+                return false;
+            } else if (isNaN(value) || value <= 0) {
+                input.classList.add('error');
+                errorElement.textContent = 'Please enter a valid positive amount';
+                errorElement.classList.add('show');
+                return false;
+            } else if (value < minAmount) {
+                input.classList.add('error');
+                errorElement.textContent = `Amount must be at least ${minAmount}`;
+                errorElement.classList.add('show');
+                return false;
+            }
+            
+            input.classList.remove('error');
+            errorElement.classList.remove('show');
+            return true;
+        }
+
+        function validateSelect(select) {
+            const errorElement = document.getElementById(`${select.name}-error`);
+            if (!select.value) {
+                select.classList.add('error');
+                errorElement.textContent = 'Please select an option';
+                errorElement.classList.add('show');
+                return false;
+            }
+            
+            select.classList.remove('error');
+            errorElement.classList.remove('show');
+            return true;
+        }
+
+        function validateTextarea(textarea) {
+            const errorElement = document.getElementById(`${textarea.name}-error`);
+            let value = textarea.value;
+            
+            if (textarea.name === 'purpose' && textarea.form.id === 'travelClaimForm') {
+                value = value.replace(/[^a-zA-Z\s]/g, '');
+                value = value.replace(/^\s+/, '');
+                if (value.length > 0 && value[0] !== ' ') {
+                    value = value.replace(/\s+/g, ' ');
+                } else {
+                    value = value.trim();
+                }
+                value = value.substring(0, 300);
+                if (value !== textarea.value) {
+                    textarea.value = value;
+                }
+                if (value.trim().length === 0) {
+                    textarea.classList.add('error');
+                    errorElement.textContent = 'This field must contain at least one character (spaces only are not allowed)';
+                    errorElement.classList.add('show');
+                    return false;
+                }
+                const alphaCount = value.replace(/\s/g, '').length;
+                if (alphaCount < 5) {
+                    textarea.classList.add('error');
+                    errorElement.textContent = 'Purpose must contain at least 5 alphabetic characters';
+                    errorElement.classList.add('show');
+                    return false;
+                }
+                textarea.classList.remove('error');
+                errorElement.classList.remove('show');
+                return true;
+            }
+            
+            if (textarea.name === 'description' && textarea.form.id === 'otherClaimForm') {
+                value = value.replace(/[^a-zA-Z\s]/g, '');
+                value = value.replace(/^\s+/, '');
+                if (value.length > 0 && value[0] !== ' ') {
+                    value = value.replace(/\s+/g, ' ');
+                } else {
+                    value = value.trim();
+                }
+                value = value.substring(0, 300);
+                if (value !== textarea.value) {
+                    textarea.value = value;
+                }
+                if (value.trim().length === 0) {
+                    textarea.classList.add('error');
+                    errorElement.textContent = 'This field must contain at least one character (spaces only are not allowed)';
+                    errorElement.classList.add('show');
+                    return false;
+                }
+                const alphaCount = value.replace(/\s/g, '').length;
+                if (alphaCount < 5) {
+                    textarea.classList.add('error');
+                    errorElement.textContent = 'Description must contain at least 5 alphabetic characters';
+                    errorElement.classList.add('show');
+                    return false;
+                }
+                textarea.classList.remove('error');
+                errorElement.classList.remove('show');
+                return true;
+            }
+            
+            const oldValue = value;
+            value = value.replace(/[^a-zA-Z\s]/g, '');
+            if (value !== oldValue) {
+                textarea.value = value;
+            }
+            if (value.trim().length === 0) {
+                textarea.classList.add('error');
+                errorElement.textContent = 'This field must contain at least one character (spaces only are not allowed)';
+                errorElement.classList.add('show');
+                return false;
+            }
+            if (value.replace(/\s/g, '').length < 5) {
+                textarea.classList.add('error');
+                errorElement.textContent = 'This field must contain at least 5 non-space characters';
+                errorElement.classList.add('show');
+                return false;
+            }
+            textarea.classList.remove('error');
+            errorElement.classList.remove('show');
+            return true;
+        }
+
+        document.querySelectorAll('form').forEach(form => {
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                let isValid = true;
+
+                const employeeId = form.querySelector('input[name="employeeId"]');
+                const formType = form.id.replace('ClaimForm', '');
+                const employeeIdErrorId = `${formType}EmployeeId-error`;
+
+                if (!validateEmployeeId(employeeId, employeeIdErrorId)) {
+                    isValid = false;
+                }
+
+                form.querySelectorAll('input[type="text"]').forEach(input => {
+                    if (input.name !== 'employeeId' && !validateTextInput(input)) {
+                        isValid = false;
+                    }
+                });
+
+                form.querySelectorAll('textarea').forEach(textarea => {
+                    if (!validateTextarea(textarea)) {
+                        isValid = false;
+                    }
+                });
+
+                form.querySelectorAll('input[type="date"]').forEach(input => {
+                    if (!validateDate(input)) {
+                        isValid = false;
+                    }
+                });
+
+                const amountInput = form.querySelector('input[name="amount"]');
+                const amountErrorId = `${formType}Amount-error`;
+                if (!validateAmount(amountInput, amountErrorId)) {
+                    isValid = false;
+                }
+
+                form.querySelectorAll('select').forEach(select => {
+                    if (!validateSelect(select)) {
+                        isValid = false;
+                    }
+                });
+
+                if (!isValid) {
+                    return;
+                }
+
+                const formData = new FormData(form);
+                const claimData = {
+                    type: currentForm,
+                    ...Object.fromEntries(formData)
+                };
+
+                try {
+                    const response = await fetch('http://localhost:3000/api/claims', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(claimData)
+                    });
+
+                    const result = await response.json();
+                    if (response.ok) {
+                        form.reset();
+                        showNotification('Claim submitted successfully!');
+                    } else {
+                        employeeId.classList.add('error');
+                        const errorElement = document.getElementById(employeeIdErrorId);
+                        errorElement.textContent = result.error || 'Error submitting claim';
+                        errorElement.classList.add('show');
+                        showNotification(result.error || 'Error submitting claim', true);
+                    }
+                } catch (error) {
+                    showNotification('Error submitting claim', true);
+                }
+            });
+
+            form.querySelectorAll('input[type="text"]').forEach(input => {
+                if (input.name !== 'employeeId') {
+                    input.addEventListener('input', () => validateTextInput(input));
+                    input.addEventListener('blur', () => validateTextInput(input));
+                    input.addEventListener('paste', (e) => {
+                        let pastedData = (e.clipboardData || window.clipboardData).getData('text');
+                        pastedData = pastedData.replace(/[^a-zA-Z\s]/g, '');
+                        if (input.name === 'employeeName' || input.name === 'fromDestination' || input.name === 'toDestination' || 
+                            (input.name === 'hospital' && input.form.id === 'medicalClaimForm') ||
+                            (input.name === 'claimType' && input.form.id === 'otherClaimForm')) {
+                            pastedData = pastedData.replace(/^\s+/, '');
+                            if (pastedData.length > 0 && pastedData[0] !== ' ') {
+                                pastedData = pastedData.replace(/\s+/g, ' ');
+                            } else {
+                                pastedData = pastedData.trim();
+                            }
+                            pastedData = pastedData.substring(0, input.name === 'hospital' || input.name === 'claimType' ? 30 : 60);
+                        }
+                        setTimeout(() => {
+                            input.value = pastedData;
+                            validateTextInput(input);
+                        }, 0);
+                    });
+                }
+            });
+
+            form.querySelectorAll('textarea').forEach(textarea => {
+                textarea.addEventListener('input', () => validateTextarea(textarea));
+                textarea.addEventListener('blur', () => validateTextarea(textarea));
+                textarea.addEventListener('paste', (e) => {
+                    let pastedData = (e.clipboardData || window.clipboardData).getData('text');
+                    pastedData = pastedData.replace(/[^a-zA-Z\s]/g, '');
+                    if ((textarea.name === 'purpose' && textarea.form.id === 'travelClaimForm') ||
+                        (textarea.name === 'description' && textarea.form.id === 'otherClaimForm')) {
+                        pastedData = pastedData.replace(/^\s+/, '');
+                        if (pastedData.length > 0 && pastedData[0] !== ' ') {
+                            pastedData = pastedData.replace(/\s+/g, ' ');
+                        } else {
+                            pastedData = pastedData.trim();
+                        }
+                        pastedData = pastedData.substring(0, 300);
+                    }
+                    setTimeout(() => {
+                        textarea.value = pastedData;
+                        validateTextarea(textarea);
+                    }, 0);
+                });
+            });
+
+            form.querySelectorAll('input[name="employeeId"]').forEach(input => {
+                const formType = form.id.replace('ClaimForm', '');
+                const errorId = `${formType}EmployeeId-error`;
+                input.addEventListener('input', () => validateEmployeeId(input, errorId));
+                input.addEventListener('blur', () => validateEmployeeId(input, errorId));
+                input.addEventListener('paste', (e) => {
+                    setTimeout(() => {
+                        validateEmployeeId(input, errorId);
+                    }, 0);
+                });
+            });
+
+            form.querySelectorAll('input[type="date"]').forEach(input => {
+                input.addEventListener('input', () => validateDate(input));
+                input.addEventListener('change', () => validateDate(input));
+                
+                if ((input.name === 'travelDate' && input.form.id === 'travelClaimForm') || 
+                    (input.name === 'treatmentDate' && input.form.id === 'medicalClaimForm') ||
+                    (input.name === 'claimDate' && input.form.id === 'otherClaimForm')) {
+                    const today = new Date();
+                    const twoYearsAgo = new Date();
+                    twoYearsAgo.setFullYear(today.getFullYear() - 2);
+                    const oneYearFromNow = new Date();
+                    oneYearFromNow.setFullYear(today.getFullYear() + 1);
+                    
+                    let mm = today.getMonth() + 1;
+                    let dd = today.getDate();
+                    if (dd < 10) dd = '0' + dd;
+                    if (mm < 10) mm = '0' + mm;
+                    
+                    let minMm = twoYearsAgo.getMonth() + 1;
+                    let minDd = twoYearsAgo.getDate();
+                    if (minDd < 10) minDd = '0' + minDd;
+                    if (minMm < 10) minMm = '0' + minMm;
+                    
+                    let maxMm = oneYearFromNow.getMonth() + 1;
+                    let maxDd = oneYearFromNow.getDate();
+                    if (maxDd < 10) maxDd = '0' + maxDd;
+                    if (maxMm < 10) maxMm = '0' + maxMm;
+                    
+                    const minDate = twoYearsAgo.getFullYear() + '-' + minMm + '-' + minDd;
+                    const maxDate = oneYearFromNow.getFullYear() + '-' + maxMm + '-' + maxDd;
+                    
+                    input.setAttribute('min', minDate);
+                    input.setAttribute('max', maxDate);
+                }
+            });
+
+            form.querySelectorAll('input[type="number"]').forEach(input => {
+                const formType = form.id.replace('ClaimForm', '');
+                const errorId = `${formType}Amount-error`;
+                input.addEventListener('input', () => validateAmount(input, errorId));
+                input.addEventListener('blur', () => validateAmount(input, errorId));
+            });
+
+            form.querySelectorAll('select').forEach(select => {
+                select.addEventListener('change', () => validateSelect(select));
+            });
+        });
+
+        showForm('travel');
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            let mm = today.getMonth() + 1;
+            let dd = today.getDate();
+            
+            if (dd < 10) dd = '0' + dd;
+            if (mm < 10) mm = '0' + mm;
+            
+            const todayFormatted = yyyy + '-' + mm + '-' + dd;
+            
+            const twoYearsAgo = new Date();
+            twoYearsAgo.setFullYear(today.getFullYear() - 2);
+            let minMm = twoYearsAgo.getMonth() + 1;
+            let minDd = twoYearsAgo.getDate();
+            if (minDd < 10) minDd = '0' + minDd;
+            if (minMm < 10) minMm = '0' + minMm;
+            const minDate = twoYearsAgo.getFullYear() + '-' + minMm + '-' + minDd;
+            
+            const oneYearFromNow = new Date();
+            oneYearFromNow.setFullYear(today.getFullYear() + 1);
+            let maxMm = oneYearFromNow.getMonth() + 1;
+            let maxDd = oneYearFromNow.getDate();
+            if (maxDd < 10) maxDd = '0' + maxDd;
+            if (maxMm < 10) maxMm = '0' + maxMm;
+            const maxDate = oneYearFromNow.getFullYear() + '-' + maxMm + '-' + maxDd;
+            
+            document.querySelectorAll('input[type="date"]').forEach(input => {
+                if ((input.name === 'travelDate' && input.form.id === 'travelClaimForm') || 
+                    (input.name === 'treatmentDate' && input.form.id === 'medicalClaimForm') ||
+                    (input.name === 'claimDate' && input.form.id === 'otherClaimForm')) {
+                    input.setAttribute('min', minDate);
+                    input.setAttribute('max', maxDate);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
