@@ -676,7 +676,7 @@
 
         async function updateClaimStatus(claimId, status) {
             try {
-                const response = await fetch(`http://localhost:3000/api/claims/${claimId}`, {
+                const response = await fetch(`http://13.60.22.32:3008/api/claims/${claimId}`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json'
@@ -718,7 +718,7 @@
 
             try {
                 const query = new URLSearchParams({ search: searchTerm, status: statusFilter });
-                const response = await fetch(`http://localhost:3000/api/claims?${query}`);
+                const response = await fetch(`http://13.60.22.32:3008/api/claims?${query}`);
                 const claims = await response.json();
 
                 updateStats(claims);
@@ -775,7 +775,7 @@
         async function clearAllClaims() {
             if (confirm('Are you sure you want to clear all claims? This action cannot be undone.')) {
                 try {
-                    const response = await fetch('http://localhost:3000/api/claims', {
+                    const response = await fetch('http://13.60.22.32:3008/api/claims', {
                         method: 'DELETE'
                     });
                     const result = await response.json();
