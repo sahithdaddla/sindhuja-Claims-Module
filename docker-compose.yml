@@ -6,7 +6,7 @@ services:
     image: postgres:16-alpine
     container_name: claims_postgres
     ports:
-      - "5438:5432"                # host:container
+      - "5204:5432"                # host:container
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: admin     # matches server.js
@@ -21,7 +21,7 @@ services:
     build: ./Backend               # uses Backend/Dockerfile
     container_name: claims_backend
     ports:
-      - "3008:3008"
+      - "3204:3204"
     depends_on:
       - postgres
     environment:
@@ -37,7 +37,7 @@ services:
     build: ./Employee-claims       # uses Employee-claims/Dockerfile
     container_name: employee_claims_ui
     ports:
-      - "8111:80"                  # host 8111 → nginx 80
+      - "8008:80"                  # host 8111 → nginx 80
     depends_on:
       - backend
     networks: [claims_net]
@@ -47,7 +47,7 @@ services:
     build: ./HR-claims             # uses HR-claims/Dockerfile
     container_name: hr_claims_ui
     ports:
-      - "8112:80"                  # host 8112 → nginx 80
+      - "8009:80"                  # host 8112 → nginx 80
     depends_on:
       - backend
     networks: [claims_net]
