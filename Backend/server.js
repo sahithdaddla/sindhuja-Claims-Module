@@ -164,5 +164,5 @@ app.delete('/api/claims', async (req, res) => {
 
 // Start the server
 app.listen(port, () => {
-    console.log(`Server running at http://51.21.169.171:${port}`);
+    console.log(`Server running at http://13.60.174.27:${port}`);
 });
